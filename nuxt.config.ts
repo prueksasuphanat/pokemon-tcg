@@ -21,8 +21,7 @@ export default defineNuxtConfig({
     // When deploying to GitHub Pages under a repository path (e.g., https://username.github.io/repo-name/),
     // set NUXT_APP_BASE_URL environment variable to '/repo-name/'
     // For local development or root domain deployment, it defaults to '/'
-    baseURL: process.env.NUXT_APP_BASE_URL || '/',
-    
+baseURL: '/poekemon-tcg/',    
     head: {
       link: [
         {
