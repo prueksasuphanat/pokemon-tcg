@@ -1,14 +1,14 @@
 name: Deploy to GitHub Pages
 
 # Trigger configuration
-# - Automatically deploy when code is pushed to main branch
-# - Run build validation on pull requests targeting main
+# - Automatically deploy when code is pushed to master branch
+# - Run build validation on pull requests targeting master
 # - Allow manual triggering via GitHub Actions UI
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 # Minimal permissions required for deployment
@@ -66,7 +66,7 @@ jobs:
       
       # Verify build output
       # - Ensures .output/public directory exists and contains required files
-      # - Checks for index.html (main entry point)
+      # - Checks for index.html (master entry point)
       # - Checks for _nuxt/ directory (bundled assets)
       # - Checks for .nojekyll file (Jekyll bypass)
       # - Fails the workflow if any required files are missing
@@ -105,13 +105,13 @@ jobs:
           echo "Build output verification completed successfully!"
       
       # Deploy to GitHub Pages
-      # - Only runs on pushes to main branch (skipped for PRs)
+      # - Only runs on pushes to master branch (skipped for PRs)
       # - Uses built-in GITHUB_TOKEN for secure authentication
       # - Pushes contents of .output/public to gh-pages branch
       # - Creates gh-pages branch if it doesn't exist
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .output/public
