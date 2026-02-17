@@ -387,7 +387,7 @@ onMounted(() => {
       class="max-[407px]:w-full"
     >
       <img
-        class="mt-0 w-[102px] h-[142px] rounded-[5px] z-10 justify-self-center max-[407px]:h-auto max-[407px]:max-w-[194.73px] max-[407px]:w-full max-[407px]:justify-center max-[407px]:justify-self-center"
+        class="mt-0 w-[102px] h-[142px] rounded-[5px] z-10 max-[407px]:h-auto max-[407px]:max-w-[194.73px] max-[407px]:w-full max-[407px]:justify-center mx-auto"
         :src="card.images.small"
         alt=""
       />
