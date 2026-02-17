@@ -1,0 +1,118 @@
+name: Deploy to GitHub Pages
+
+# Trigger configuration
+# - Automatically deploy when code is pushed to main branch
+# - Run build validation on pull requests targeting main
+# - Allow manual triggering via GitHub Actions UI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Minimal permissions required for deployment
+# - contents: write - Required to push to gh-pages branch
+# - pages: write - Required to deploy to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+
+# Job definition
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Setup Node.js environment with caching
+      # - Installs Node.js version 18 (LTS)
+      # - Automatically caches npm dependencies based on package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Install dependencies
+      # - Uses npm ci for clean, reproducible installation
+      # - Installs exact versions from package-lock.json
+      # - Faster and more reliable than npm install in CI environments
+      - name: Install dependencies
+        run: npm ci
+      
+      # Generate static site
+      # - Runs nuxt generate to pre-render all pages
+      # - Outputs static files to .output/public directory
+      # - Creates a fully static site that can be hosted without a Node.js server
+      # - Sets NUXT_APP_BASE_URL to configure the base path for GitHub Pages
+      #   * For repository pages: use /repository-name/ (e.g., /pokemon-tcg/)
+      #   * The repository name is the part after github.com/username/ in your repo URL
+      #   * This ensures assets and routing work correctly when deployed to a subdirectory
+      - name: Generate static site
+        run: npm run generate
+        env:
+          NUXT_APP_BASE_URL: /pokemon-tcg/
+      
+      # Add .nojekyll file
+      # - Prevents GitHub Pages from processing the site with Jekyll
+      # - Allows files/directories starting with underscore (like _nuxt/)
+      # - Ensures faster deployment without Jekyll build step
+      - name: Add .nojekyll file
+        run: touch .output/public/.nojekyll
+      
+      # Verify build output
+      # - Ensures .output/public directory exists and contains required files
+      # - Checks for index.html (main entry point)
+      # - Checks for _nuxt/ directory (bundled assets)
+      # - Checks for .nojekyll file (Jekyll bypass)
+      # - Fails the workflow if any required files are missing
+      - name: Verify build output
+        run: |
+          echo "Verifying build output directory..."
+          
+          # Check if .output/public directory exists
+          if [ ! -d ".output/public" ]; then
+            echo "Error: .output/public directory does not exist"
+            exit 1
+          fi
+          echo "✓ .output/public directory exists"
+          
+          # Check if index.html exists
+          if [ ! -f ".output/public/index.html" ]; then
+            echo "Error: index.html not found in .output/public"
+            exit 1
+          fi
+          echo "✓ index.html exists"
+          
+          # Check if _nuxt directory exists
+          if [ ! -d ".output/public/_nuxt" ]; then
+            echo "Error: _nuxt directory not found in .output/public"
+            exit 1
+          fi
+          echo "✓ _nuxt directory exists"
+          
+          # Check if .nojekyll file exists
+          if [ ! -f ".output/public/.nojekyll" ]; then
+            echo "Error: .nojekyll file not found in .output/public"
+            exit 1
+          fi
+          echo "✓ .nojekyll file exists"
+          
+          echo "Build output verification completed successfully!"
+      
+      # Deploy to GitHub Pages
+      # - Only runs on pushes to main branch (skipped for PRs)
+      # - Uses built-in GITHUB_TOKEN for secure authentication
+      # - Pushes contents of .output/public to gh-pages branch
+      # - Creates gh-pages branch if it doesn't exist
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .output/public
+          publish_branch: gh-pages
