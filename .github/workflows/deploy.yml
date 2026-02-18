@@ -56,6 +56,7 @@ jobs:
         run: npm run generate
         env:
           NUXT_APP_BASE_URL: /pokemon-tcg/
+          POKEMON_TCG_API_KEY: ${{ secrets.POKEMON_TCG_API_KEY }}
       
       # Add .nojekyll file
       # - Prevents GitHub Pages from processing the site with Jekyll

@@ -1,18 +1,27 @@
 import axios from "axios";
 import { defineStore } from "pinia";
 
-export const useCardStore = defineStore({
-  id: "useCardStore",
+// Create axios instance with proper configuration
+const apiClient = axios.create({
+  baseURL: 'https://api.pokemontcg.io/v2',
+});
 
+export const useCardStore = defineStore("useCardStore", {
   state: () => ({
     cards: [],
-    key: "c3ee7894-5ccd-4a9b-aa1f-946b53379cb2",
     isLoading: false,
     name: "",
     set: "",
     rarity: "",
     type: "",
   }),
+
+  getters: {
+    apiKey() {
+      const config = useRuntimeConfig();
+      return config.public.pokemonTcgApiKey;
+    },
+  },
 
   actions: {
     // name, set, rarity, type
@@ -26,7 +35,7 @@ export const useCardStore = defineStore({
     ) {
       this.isLoading = true;
 
-      let path = `https://api.pokemontcg.io/v2/cards?page=${page}&pageSize=${pageSize}&`;
+      let path = `/cards?page=${page}&pageSize=${pageSize}&`;
 
       let pathQuery = [];
 
@@ -59,15 +68,16 @@ export const useCardStore = defineStore({
       }
 
       try {
-        const response = await axios.get(path, {
+        const response = await apiClient.get(path, {
           headers: {
-            "X-Api-Key": this.key,
+            "X-Api-Key": this.apiKey,
           },
         });
 
         return response.data;
       } catch (error) {
-        console.error(error);
+        console.error('API Error:', error.response?.data || error.message);
+        return { data: [], totalCount: 0, count: 0 };
       } finally {
         this.isLoading = false;
       }
@@ -77,15 +87,16 @@ export const useCardStore = defineStore({
       this.isLoading = true;
 
       try {
-        const response = await axios.get("https://api.pokemontcg.io/v2/sets", {
+        const response = await apiClient.get("/sets", {
           headers: {
-            "X-Api-Key": this.key,
+            "X-Api-Key": this.apiKey,
           },
         });
 
         return response.data;
       } catch (error) {
-        console.error(error);
+        console.error('getSet Error:', error.response?.data || error.message);
+        return { data: [] };
       } finally {
         this.isLoading = false;
       }
@@ -95,18 +106,16 @@ export const useCardStore = defineStore({
       this.isLoading = true;
 
       try {
-        const response = await axios.get(
-          "https://api.pokemontcg.io/v2/rarities",
-          {
-            headers: {
-              "X-Api-Key": this.key,
-            },
-          }
-        );
+        const response = await apiClient.get("/rarities", {
+          headers: {
+            "X-Api-Key": this.apiKey,
+          },
+        });
 
         return response.data;
       } catch (error) {
-        console.error(error);
+        console.error('getRarity Error:', error.response?.data || error.message);
+        return { data: [] };
       } finally {
         this.isLoading = false;
       }
@@ -116,15 +125,16 @@ export const useCardStore = defineStore({
       this.isLoading = true;
 
       try {
-        const response = await axios.get("https://api.pokemontcg.io/v2/types", {
+        const response = await apiClient.get("/types", {
           headers: {
-            "X-Api-Key": this.key,
+            "X-Api-Key": this.apiKey,
           },
         });
 
         return response.data;
       } catch (error) {
-        console.error(error);
+        console.error('getType Error:', error.response?.data || error.message);
+        return { data: [] };
       } finally {
         this.isLoading = false;
       }

@@ -3,6 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   devtools: { enabled: false },
 
+  runtimeConfig: {
+    public: {
+      pokemonTcgApiKey: process.env.POKEMON_TCG_API_KEY || '',
+    },
+  },
+
   css: [
     "primevue/resources/themes/saga-blue/theme.css",
     "primevue/resources/primevue.min.css",
@@ -21,7 +27,7 @@ export default defineNuxtConfig({
     // When deploying to GitHub Pages under a repository path (e.g., https://username.github.io/repo-name/),
     // set NUXT_APP_BASE_URL environment variable to '/repo-name/'
     // For local development or root domain deployment, it defaults to '/'
-    baseURL: "/pokemon-tcg/",
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
     head: {
       link: [
         {

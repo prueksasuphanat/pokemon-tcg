@@ -83,37 +83,6 @@ const select = async () => {
   isLoading.value = false;
 };
 
-const getSet = async () => {
-  const datas = await cardStore.getSet();
-
-  setOptions.value.push({ name: "All", code: "" });
-
-  datas.data.forEach((data) => {
-    setOptions.value.push({ name: data.name, code: data.id });
-  });
-};
-
-const getRarity = async () => {
-  const datas = await cardStore.getRarity();
-
-  rarityOptions.value.push({ name: "All", code: "" });
-
-  datas.data.forEach((data, index) => {
-    rarityOptions.value.push({ name: data, code: index });
-  });
-};
-
-const getType = async () => {
-  const datas = await cardStore.getType();
-
-  typeOptions.value.push({ name: "All", code: "" });
-
-  datas.data.forEach((data, index) => {
-    typeOptions.value.push({ name: data, code: index });
-  });
-};
-// END API
-
 // MODAL
 const showModal = ref(false);
 
@@ -187,14 +156,48 @@ const numberFormat = (value) => {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
-onMounted(() => {
-  isLoading.value = false;
-  getSet();
-  getRarity();
-  getType();
-  select();
-
+onMounted(async () => {
   isLoading.value = true;
+  
+  try {
+    // เรียก API แบบ parallel เพื่อความเร็ว
+    const [setsData, raritiesData, typesData] = await Promise.all([
+      cardStore.getSet(),
+      cardStore.getRarity(),
+      cardStore.getType()
+    ]);
+    
+    // Process sets
+    if (setsData?.data) {
+      setOptions.value.push({ name: "All", code: "" });
+      setsData.data.forEach((data) => {
+        setOptions.value.push({ name: data.name, code: data.id });
+      });
+    }
+    
+    // Process rarities
+    if (raritiesData?.data) {
+      rarityOptions.value.push({ name: "All", code: "" });
+      raritiesData.data.forEach((data, index) => {
+        rarityOptions.value.push({ name: data, code: index });
+      });
+    }
+    
+    // Process types
+    if (typesData?.data) {
+      typeOptions.value.push({ name: "All", code: "" });
+      typesData.data.forEach((data, index) => {
+        typeOptions.value.push({ name: data, code: index });
+      });
+    }
+    
+    // Load initial cards
+    await select();
+  } catch (error) {
+    console.error('Error loading initial data:', error);
+  } finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
@@ -375,11 +378,29 @@ onMounted(() => {
 
   <!-- cards -->
   <div
-    class="flex flex-wrap gap-x-[16px] gap-y-[24px] justify-start h-[280px] max-[407px]:w-full max-[407px]:justify-center max-[598px]:justify-center"
+    v-if="isLoading"
+    class="flex justify-center items-center h-[280px]"
   >
-    <div v-if="countData === 0" class="">Data not found</div>
-    <div v-else-if="isLoading" class="">Loading</div>
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#EA7C69]"></div>
+      <p class="mt-4 text-[#ABBBC2]">Loading cards...</p>
+    </div>
+  </div>
 
+  <div
+    v-else-if="countData === 0"
+    class="flex justify-center items-center h-[280px]"
+  >
+    <div class="text-center">
+      <p class="text-[18px] text-[#ABBBC2]">No cards found</p>
+      <p class="text-[14px] text-[#ABBBC2] mt-2">Try adjusting your filters</p>
+    </div>
+  </div>
+
+  <div
+    v-else
+    class="flex flex-wrap gap-x-[16px] gap-y-[24px] justify-start min-h-[280px] max-[407px]:w-full max-[407px]:justify-center max-[598px]:justify-center"
+  >
     <div
       v-if="countData !== 0"
       v-for="(card, index) in cards"
